@@ -1,7 +1,29 @@
-export type Store = ReadonlyMap<string, string>;
+import { initDatabase } from './database';
+import { hashData } from './dataHasher';
 
-export const createStore = (): Store => new Map();
+let dbOps: {
+    setData: (key: string, value: string) => Promise<void>;
+    getData: (key: string) => Promise<string | undefined>;
+    getAllData: () => Promise<Array<{ key: string; value: string }>>;
+};
 
-export const setData = (store: Store, key: string, value: string): Store => new Map(store).set(key, value);
+export const initialize = async () => {
+    dbOps = await initDatabase();
+};
 
-export const getData = (store: Store, key: string): string | undefined => store.get(key);
+export const setData = async (data: string): Promise<string> => {
+    if (!dbOps) throw new Error('Database not initialized');
+    const hash = hashData(data);
+    await dbOps.setData(hash, data);
+    return hash;
+};
+
+export const getData = async (hash: string): Promise<string | undefined> => {
+    if (!dbOps) throw new Error('Database not initialized');
+    return await dbOps.getData(hash);
+};
+
+export const getAllData = async (): Promise<Array<{ key: string; value: string }>> => {
+    if (!dbOps) throw new Error('Database not initialized');
+    return await dbOps.getAllData();
+};

@@ -1,25 +1,27 @@
 import { createExtrinsicListener } from './extrinsicListener';
+import { initialize, setData, getAllData } from './keyValueStore';
 import { storeData, retrieveData } from './api';
-import { createStore } from './keyValueStore';
 
 const main = async () => {
-    let store = createStore();
+    await initialize();
 
     const listenForRemarks = createExtrinsicListener('wss://rpc.devnet.subspace.network/ws');
 
-    await listenForRemarks(data => {
-        const [newStore, hash] = storeData(store, data);
-        store = newStore;
+    const displayAllData = async () => {
+        const allData = await getAllData();
+        console.log('All data in the database:');
+        allData.forEach(({ key, value }) => {
+            console.log(`Hash: ${key}, Value: ${value}`);
+        });
+    };
+
+    await listenForRemarks(async data => {
+        const hash = await storeData(data);
         console.log(`Stored data with hash: ${hash}`);
+        displayAllData();
     });
 
-    // Example of storing and retrieving data
-    // const testData = 'Test data';
-    // const [updatedStore, testHash] = storeData(store, testData);
-    // store = updatedStore;
-
-    // const retrievedData = retrieveData(store, testHash);
-    // console.log(`Retrieved data: ${retrievedData}`);
+    await displayAllData();
 };
 
 main().catch(console.error);

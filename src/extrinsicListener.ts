@@ -1,6 +1,5 @@
 import '@polkadot/api-augment';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { Option } from '@polkadot/types';
 
 export const createExtrinsicListener =
     (wsUrl: string) =>
@@ -19,18 +18,15 @@ export const createExtrinsicListener =
                 const { event, phase } = record;
 
                 if (api.events.system.Remarked.is(event)) {
-                    console.log(`Remark detected from ${event.data[0].toString()}`);
-
                     if (phase.isApplyExtrinsic) {
                         const extrinsicIndex = phase.asApplyExtrinsic.toNumber();
                         const extrinsic = block.block.extrinsics[extrinsicIndex];
 
-                        console.log(extrinsic.method.section, '.', extrinsic.method.method);
                         if (extrinsic.method.section === 'system' && extrinsic.method.method === 'remarkWithEvent') {
                             const remarkData = extrinsic.args[0].toString();
                             const asciiData = Buffer.from(remarkData.slice(2), 'hex').toString('ascii');
                             console.log(`Remark data (ASCII): ${asciiData}`);
-                            callback(asciiData);
+                            callback(remarkData);
                         }
                     }
                 }
