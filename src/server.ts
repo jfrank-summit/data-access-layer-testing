@@ -8,8 +8,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
-import { initialize, getData } from './keyValueStore';
-import { storeData } from './api';
+import { initialize, getData } from './keyValueStore/keyValueStore';
+import { storeData } from './api/api';
 
 const app = express();
 const port = 3000;

@@ -4,9 +4,9 @@ dotenv.config();
 const RPC_ENDPOINT = process.env.RPC_ENDPOINT!;
 const KEYPAIR_URI = process.env.KEYPAIR_URI!;
 
-import { createExtrinsicListener } from './extrinsicListener';
-import { initialize, getAllData } from './keyValueStore';
-import { storeData } from './api';
+import { createExtrinsicListener } from './blockchain/extrinsicListener';
+import { initialize, getAllData } from './keyValueStore/keyValueStore';
+import { storeData } from './api/api';
 import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 
