@@ -7,7 +7,6 @@ const KEYPAIR_URI = process.env.KEYPAIR_URI!;
 import express from 'express';
 import bodyParser from 'body-parser';
 import { createKeyValueStore } from './keyValueStore';
-import { storeData } from './api/api';
 import { initAutonomysApi } from './blockchain';
 
 const createServer = async () => {
@@ -25,6 +24,7 @@ const createServer = async () => {
             if (!data) {
                 return res.status(400).json({ error: 'Data is required' });
             }
+            await api.tx.system.remarkWithEvent(data).signAndSend(account);
             const hash = await keyValueStore.setData(data);
             res.json({ hash });
         } catch (error) {
