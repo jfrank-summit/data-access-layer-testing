@@ -1,3 +1,9 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+const RPC_ENDPOINT = process.env.RPC_ENDPOINT!;
+const KEYPAIR_URI = process.env.KEYPAIR_URI!;
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
@@ -15,10 +21,10 @@ let account: any;
 
 const initPolkadot = async () => {
     await cryptoWaitReady();
-    const wsProvider = new WsProvider('wss://rpc.devnet.subspace.network/ws');
+    const wsProvider = new WsProvider(RPC_ENDPOINT);
     api = await ApiPromise.create({ provider: wsProvider });
     const keyring = new Keyring({ type: 'sr25519' });
-    account = keyring.addFromUri('//Alice'); // Replace with your actual account in production
+    account = keyring.addFromUri(KEYPAIR_URI);
 };
 
 app.post('/submit', async (req, res) => {

@@ -1,3 +1,9 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+const RPC_ENDPOINT = process.env.RPC_ENDPOINT!;
+const KEYPAIR_URI = process.env.KEYPAIR_URI!;
+
 import { createExtrinsicListener } from './extrinsicListener';
 import { initialize, getAllData } from './keyValueStore';
 import { storeData } from './api';
@@ -22,13 +28,13 @@ const main = async () => {
     await initialize();
     await cryptoWaitReady();
 
-    const wsProvider = new WsProvider('wss://rpc.devnet.subspace.network/ws');
+    const wsProvider = new WsProvider(RPC_ENDPOINT);
     const api = await ApiPromise.create({ provider: wsProvider });
 
     const keyring = new Keyring({ type: 'sr25519' });
-    const account = keyring.addFromUri('//Alice'); // Use a test account. Replace with your actual account in production.
+    const account = keyring.addFromUri(KEYPAIR_URI);
 
-    const listenForRemarks = createExtrinsicListener('wss://rpc.devnet.subspace.network/ws');
+    const listenForRemarks = createExtrinsicListener(RPC_ENDPOINT);
 
     const displayAllData = async () => {
         const allData = await getAllData();
