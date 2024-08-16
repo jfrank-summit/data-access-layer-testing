@@ -1,5 +1,5 @@
-import { initialize, setData, getData, getAllData } from '../keyValueStore/keyValueStore';
-import { hashData } from '../utils/dataHasher';
+import { initialize, setData, getData, getAllData } from '../keyValueStore';
+import { hashData } from '../utils';
 
 jest.mock('../database/database', () => ({
     initDatabase: jest.fn().mockResolvedValue({

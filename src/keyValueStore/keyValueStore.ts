@@ -1,5 +1,5 @@
-import { initDatabase } from '../database/database';
-import { hashData } from '../utils/dataHasher';
+import { initDatabase } from '../database';
+import { hashData } from '../utils';
 
 let dbOps: {
     setData: (key: string, value: string) => Promise<void>;

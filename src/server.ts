@@ -6,9 +6,9 @@ const KEYPAIR_URI = process.env.KEYPAIR_URI!;
 
 import express from 'express';
 import bodyParser from 'body-parser';
-import { initialize, getData } from './keyValueStore/keyValueStore';
+import { initialize, getData } from './keyValueStore';
 import { storeData } from './api/api';
-import { initAutonomysApi } from './blockchain/autonomysApi';
+import { initAutonomysApi } from './blockchain';
 
 const createServer = async () => {
     const app = express();

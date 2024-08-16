@@ -1,4 +1,4 @@
-import { setData, getData } from '../keyValueStore/keyValueStore';
+import { setData, getData } from '../keyValueStore';
 
 export const storeData = async (data: string): Promise<string> => {
     return await setData(data);
