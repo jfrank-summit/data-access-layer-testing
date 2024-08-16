@@ -6,7 +6,7 @@ const KEYPAIR_URI = process.env.KEYPAIR_URI!;
 
 import express from 'express';
 import bodyParser from 'body-parser';
-import { initialize, getData } from './keyValueStore';
+import { createKeyValueStore } from './keyValueStore';
 import { storeData } from './api/api';
 import { initAutonomysApi } from './blockchain';
 
@@ -16,7 +16,7 @@ const createServer = async () => {
 
     app.use(bodyParser.json());
 
-    await initialize();
+    const keyValueStore = await createKeyValueStore();
     const { api, account } = await initAutonomysApi(RPC_ENDPOINT, KEYPAIR_URI);
 
     app.post('/submit', async (req, res) => {
@@ -25,7 +25,7 @@ const createServer = async () => {
             if (!data) {
                 return res.status(400).json({ error: 'Data is required' });
             }
-            const hash = await storeData(data);
+            const hash = await keyValueStore.setData(data);
             res.json({ hash });
         } catch (error) {
             res.status(500).json({ error: 'Failed to submit data' });
@@ -35,7 +35,7 @@ const createServer = async () => {
     app.get('/retrieve/:hash', async (req, res) => {
         try {
             const { hash } = req.params;
-            const data = await getData(hash);
+            const data = await keyValueStore.getData(hash);
             if (data) {
                 res.json({ data });
             } else {

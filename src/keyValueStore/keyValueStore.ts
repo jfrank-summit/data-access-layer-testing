@@ -1,29 +1,26 @@
 import { initDatabase } from '../database';
 import { hashData } from '../utils';
 
-let dbOps: {
-    setData: (key: string, value: string) => Promise<void>;
-    getData: (key: string) => Promise<string | undefined>;
-    getAllData: () => Promise<Array<{ key: string; value: string }>>;
-};
+export const createKeyValueStore = async () => {
+    const dbOps = await initDatabase();
 
-export const initialize = async () => {
-    dbOps = await initDatabase();
-};
+    const setData = async (data: string): Promise<string> => {
+        const hash = hashData(data);
+        await dbOps.setData(hash, data);
+        return hash;
+    };
 
-export const setData = async (data: string): Promise<string> => {
-    if (!dbOps) throw new Error('Database not initialized');
-    const hash = hashData(data);
-    await dbOps.setData(hash, data);
-    return hash;
-};
+    const getData = async (hash: string): Promise<string | undefined> => {
+        return await dbOps.getData(hash);
+    };
 
-export const getData = async (hash: string): Promise<string | undefined> => {
-    if (!dbOps) throw new Error('Database not initialized');
-    return await dbOps.getData(hash);
-};
+    const getAllData = async (): Promise<Array<{ key: string; value: string }>> => {
+        return await dbOps.getAllData();
+    };
 
-export const getAllData = async (): Promise<Array<{ key: string; value: string }>> => {
-    if (!dbOps) throw new Error('Database not initialized');
-    return await dbOps.getAllData();
+    return {
+        setData,
+        getData,
+        getAllData,
+    };
 };

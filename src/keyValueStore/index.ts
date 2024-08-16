@@ -1,1 +1,1 @@
-export { initialize, setData, getData, getAllData } from './keyValueStore';
+export { createKeyValueStore } from './keyValueStore';

@@ -1,9 +1,11 @@
-import { setData, getData } from '../keyValueStore';
+import { createKeyValueStore } from '../keyValueStore';
 
 export const storeData = async (data: string): Promise<string> => {
-    return await setData(data);
+    const keyValueStore = await createKeyValueStore();
+    return await keyValueStore.setData(data);
 };
 
 export const retrieveData = async (hash: string): Promise<string | undefined> => {
-    return await getData(hash);
+    const keyValueStore = await createKeyValueStore();
+    return await keyValueStore.getData(hash);
 };
