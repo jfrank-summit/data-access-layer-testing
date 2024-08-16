@@ -1,7 +1,7 @@
 import { initialize, setData, getData, getAllData } from '../keyValueStore/keyValueStore';
 import { hashData } from '../utils/dataHasher';
 
-jest.mock('../database', () => ({
+jest.mock('../database/database', () => ({
     initDatabase: jest.fn().mockResolvedValue({
         setData: jest.fn(),
         getData: jest.fn(),
@@ -13,7 +13,7 @@ describe('keyValueStore', () => {
     let mockDatabase: any;
 
     beforeEach(async () => {
-        mockDatabase = await require('../database').initDatabase();
+        mockDatabase = await require('../database/database').initDatabase();
         await initialize();
     });
 
