@@ -1,0 +1,1 @@
+export { createKeyValueStore } from './keyValueStore';

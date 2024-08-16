@@ -1,4 +1,4 @@
-import { hashData } from '../dataHasher';
+import { hashData } from '../utils';
 
 describe('dataHasher', () => {
     it('should generate a consistent hash for the same input', () => {

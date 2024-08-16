@@ -1,5 +1,5 @@
-import { initialize, setData, getData, getAllData } from '../keyValueStore';
-import { hashData } from '../dataHasher';
+import { createKeyValueStore } from '../keyValueStore';
+import { hashData } from '../utils/dataHasher';
 
 jest.mock('../database', () => ({
     initDatabase: jest.fn().mockResolvedValue({
@@ -10,21 +10,22 @@ jest.mock('../database', () => ({
 }));
 
 describe('keyValueStore', () => {
+    let keyValueStore: Awaited<ReturnType<typeof createKeyValueStore>>;
     let mockDatabase: any;
 
     beforeEach(async () => {
         mockDatabase = await require('../database').initDatabase();
-        await initialize();
+        keyValueStore = await createKeyValueStore();
     });
 
     it('should set and get data correctly', async () => {
         const testData = 'test data';
-        const hash = await setData(testData);
+        const hash = await keyValueStore.setData(testData);
         expect(hash).toBe(hashData(testData));
 
         mockDatabase.getData.mockResolvedValueOnce(testData);
 
-        const retrievedData = await getData(hash);
+        const retrievedData = await keyValueStore.getData(hash);
         expect(retrievedData).toBe(testData);
     });
 
@@ -36,7 +37,7 @@ describe('keyValueStore', () => {
 
         mockDatabase.getAllData.mockResolvedValueOnce(mockAllData);
 
-        const allData = await getAllData();
+        const allData = await keyValueStore.getAllData();
         expect(allData).toEqual(mockAllData);
     });
 });
