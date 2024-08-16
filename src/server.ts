@@ -8,6 +8,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { createKeyValueStore } from './keyValueStore';
 import { initAutonomysApi } from './blockchain';
+import { hashData } from './utils';
 
 const createServer = async () => {
     const app = express();
@@ -25,8 +26,9 @@ const createServer = async () => {
                 return res.status(400).json({ error: 'Data is required' });
             }
             await api.tx.system.remarkWithEvent(data).signAndSend(account);
-            const hash = await keyValueStore.setData(data);
-            res.json({ hash });
+            const cid = hashData(data);
+            const key = await keyValueStore.setData(cid, data);
+            res.json({ key });
         } catch (error) {
             res.status(500).json({ error: 'Failed to submit data' });
         }

@@ -4,14 +4,13 @@ import { hashData } from '../utils';
 export const createKeyValueStore = async () => {
     const dbOps = await initDatabase();
 
-    const setData = async (data: string): Promise<string> => {
-        const hash = hashData(data);
-        await dbOps.setData(hash, data);
-        return hash;
+    const setData = async (key: string, data: string): Promise<string> => {
+        await dbOps.setData(key, data);
+        return key;
     };
 
-    const getData = async (hash: string): Promise<string | undefined> => {
-        return await dbOps.getData(hash);
+    const getData = async (key: string): Promise<string | undefined> => {
+        return await dbOps.getData(key);
     };
 
     const getAllData = async (): Promise<Array<{ key: string; value: string }>> => {

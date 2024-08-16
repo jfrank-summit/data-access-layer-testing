@@ -20,7 +20,8 @@ describe('keyValueStore', () => {
 
     it('should set and get data correctly', async () => {
         const testData = 'test data';
-        const hash = await keyValueStore.setData(testData);
+        const cid = hashData(testData);
+        const hash = await keyValueStore.setData(cid, testData);
         expect(hash).toBe(hashData(testData));
 
         mockDatabase.getData.mockResolvedValueOnce(testData);
