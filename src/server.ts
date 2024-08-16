@@ -6,45 +6,54 @@ const KEYPAIR_URI = process.env.KEYPAIR_URI!;
 
 import express from 'express';
 import bodyParser from 'body-parser';
-import { createKeyValueStore } from './keyValueStore';
-import { initAutonomysApi } from './blockchain';
-import { hashData } from './utils';
+import { processData } from './services/dataChunking';
+import { retrieveData } from './api';
 
 const createServer = async () => {
     const app = express();
     const port = 3000;
 
-    app.use(bodyParser.json());
-
-    const keyValueStore = await createKeyValueStore();
-    const { api, account } = await initAutonomysApi(RPC_ENDPOINT, KEYPAIR_URI);
+    // Increase the limit to 10MB (adjust as needed)
+    app.use(bodyParser.json({ limit: '10mb' }));
+    app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
     app.post('/submit', async (req, res) => {
         try {
-            const { data } = req.body;
+            const { data, dataType, name, mimeType, customMetadata } = req.body;
             if (!data) {
                 return res.status(400).json({ error: 'Data is required' });
             }
-            await api.tx.system.remarkWithEvent(data).signAndSend(account);
-            const cid = hashData(data);
-            const key = await keyValueStore.setData(cid, data);
-            res.json({ key });
+
+            const buffer = Buffer.from(data);
+            const metadataCid = await processData(buffer, dataType || 'raw', name, mimeType, customMetadata);
+
+            res.json({ metadataCid });
         } catch (error) {
-            res.status(500).json({ error: 'Failed to submit data' });
+            console.error('Error processing data:', error);
+            res.status(500).json({ error: 'Failed to process and submit data' });
         }
     });
 
-    app.get('/retrieve/:hash', async (req, res) => {
+    app.get('/retrieve/:cid', async (req, res) => {
         try {
-            const { hash } = req.params;
-            const data = await keyValueStore.getData(hash);
-            if (data) {
-                res.json({ data });
+            const { cid } = req.params;
+            console.log(`Attempting to retrieve data for metadataCid: ${cid}`);
+            const rawData = await retrieveData(cid);
+            if (rawData) {
+                try {
+                    //TODO: parse the data if json or handle metadata differently
+                    res.json({ data: rawData });
+                } catch (parseError: any) {
+                    console.error('Error parsing metadata:', parseError);
+                    res.status(500).json({ error: 'Failed to parse metadata', details: parseError.message });
+                }
             } else {
-                res.status(404).json({ error: 'Data not found' });
+                console.log(`No metadata found for metadataCid: ${cid}`);
+                res.status(404).json({ error: 'Metadata not found' });
             }
-        } catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve data' });
+        } catch (error: any) {
+            console.error('Error retrieving data:', error);
+            res.status(500).json({ error: 'Failed to retrieve data', details: error.message });
         }
     });
 

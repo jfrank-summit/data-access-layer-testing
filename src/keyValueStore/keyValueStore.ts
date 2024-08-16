@@ -1,5 +1,4 @@
 import { initDatabase } from '../database';
-import { hashData } from '../utils';
 
 export const createKeyValueStore = async () => {
     const dbOps = await initDatabase();
