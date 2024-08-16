@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node src/index.ts",
+    "example": "ts-node src/example.ts",
     "start:server": "ts-node src/server.ts",
     "test": "jest"
   },
