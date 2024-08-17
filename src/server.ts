@@ -9,6 +9,15 @@ import bodyParser from 'body-parser';
 import { processData } from './services/dataChunking';
 import { retrieveData } from './api';
 
+const isJson = (str: string): boolean => {
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
+
 const createServer = async () => {
     const app = express();
     const port = 3000;
@@ -41,8 +50,11 @@ const createServer = async () => {
             const rawData = await retrieveData(cid);
             if (rawData) {
                 try {
-                    //TODO: parse the data if json or handle metadata differently
-                    res.json({ data: rawData });
+                    if (isJson(rawData)) {
+                        res.json({ data: JSON.parse(rawData) });
+                    } else {
+                        res.json({ data: rawData });
+                    }
                 } catch (parseError: any) {
                     console.error('Error parsing metadata:', parseError);
                     res.status(500).json({ error: 'Failed to parse metadata', details: parseError.message });
