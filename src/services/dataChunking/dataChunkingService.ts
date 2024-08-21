@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { storeData } from '../../api';
+import { storeData, retrieveData } from '../../api';
 
 const MAX_CHUNK_SIZE = 1024 * 64; // 64 KB
 
@@ -78,4 +78,28 @@ export const processData = async (
     return await storeMetadata(metadata);
 };
 
-// TODO: Implement data retrieval and reassembly
+export const retrieveAndReassembleData = async (metadataCid: string): Promise<Buffer> => {
+    const metadataString = await retrieveData(metadataCid);
+    if (!metadataString) {
+        throw new Error('Metadata not found');
+    }
+
+    const metadata: Metadata = JSON.parse(metadataString);
+    const chunks: Buffer[] = await Promise.all(
+        metadata.chunks.map(async chunk => {
+            const chunkData = await retrieveData(chunk.cid);
+            if (!chunkData) {
+                throw new Error(`Chunk with CID ${chunk.cid} not found`);
+            }
+            return Buffer.from(chunkData, 'base64');
+        })
+    );
+
+    const sortedChunks = chunks.sort(
+        (a, b) =>
+            metadata.chunks.findIndex(c => c.cid === generateCid(a)) -
+            metadata.chunks.findIndex(c => c.cid === generateCid(b))
+    );
+
+    return Buffer.concat(sortedChunks);
+};

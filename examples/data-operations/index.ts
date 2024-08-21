@@ -24,7 +24,9 @@ const submitAndRetrieve = async (data: string, dataType: 'file' | 'raw', name?: 
     logResult('Submitted data. Metadata CID:')(submitResponse.data.metadataCid);
 
     const retrieveResponse = await retrieveData(submitResponse.data.metadataCid);
-    logResult('Retrieved metadata:')(retrieveResponse.data);
+
+    // Compare the original data with the retrieved data
+    console.log('Data integrity check:', data === retrieveResponse.data ? 'Passed' : 'Failed');
 };
 
 const main = async () => {

@@ -6,7 +6,7 @@ const KEYPAIR_URI = process.env.KEYPAIR_URI!;
 
 import express from 'express';
 import bodyParser from 'body-parser';
-import { processData } from './services/dataChunking';
+import { processData, retrieveAndReassembleData } from './services/dataChunking';
 import { retrieveData } from './api';
 
 const isJson = (str: string): boolean => {
@@ -47,22 +47,19 @@ const createServer = async () => {
         try {
             const { cid } = req.params;
             console.log(`Attempting to retrieve data for metadataCid: ${cid}`);
-            const rawData = await retrieveData(cid);
-            if (rawData) {
-                try {
-                    if (isJson(rawData)) {
-                        res.json({ data: JSON.parse(rawData) });
-                    } else {
-                        res.json({ data: rawData });
-                    }
-                } catch (parseError: any) {
-                    console.error('Error parsing metadata:', parseError);
-                    res.status(500).json({ error: 'Failed to parse metadata', details: parseError.message });
-                }
-            } else {
-                console.log(`No metadata found for metadataCid: ${cid}`);
-                res.status(404).json({ error: 'Metadata not found' });
+            const data = await retrieveAndReassembleData(cid);
+
+            const metadataString = await retrieveData(cid);
+            if (!metadataString) {
+                return res.status(404).json({ error: 'Metadata not found' });
             }
+            const metadata = JSON.parse(metadataString);
+
+            res.set('Content-Type', metadata.mimeType || 'application/octet-stream');
+            if (metadata.name) {
+                res.set('Content-Disposition', `attachment; filename="${metadata.name}"`);
+            }
+            res.send(data);
         } catch (error: any) {
             console.error('Error retrieving data:', error);
             res.status(500).json({ error: 'Failed to retrieve data', details: error.message });

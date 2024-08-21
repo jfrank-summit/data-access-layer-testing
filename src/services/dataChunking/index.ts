@@ -1,1 +1,1 @@
-export { processData } from './dataChunkingService';
+export { processData, retrieveAndReassembleData } from './dataChunkingService';
