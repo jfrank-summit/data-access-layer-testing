@@ -1,5 +1,5 @@
-import { createTransactionManager } from '../../src/services/transactionManager/transactionManager';
-import dotenv from 'dotenv';
+import { createTransactionManager } from '../../backend/src/services/transactionManager/transactionManager';
+import dotenv from '../../backend/node_modules/dotenv/lib/main';
 
 dotenv.config();
 
