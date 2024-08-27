@@ -1,1 +1,0 @@
-export { initAutonomysApi } from './autonomysApi';
