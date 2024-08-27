@@ -12,12 +12,14 @@
     "@polkadot/util-crypto": "^13.0.2",
     "@types/express": "^4.17.21",
     "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
     "@types/jest": "^29.5.12",
     "@types/node": "^22.3.0",
     "jest": "^29.7.0",

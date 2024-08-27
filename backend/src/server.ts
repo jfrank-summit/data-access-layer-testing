@@ -1,10 +1,8 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-const RPC_ENDPOINT = process.env.RPC_ENDPOINT!;
-const KEYPAIR_URI = process.env.KEYPAIR_URI!;
-
 import express from 'express';
+import cors from 'cors';
 import bodyParser from 'body-parser';
 import { processData, retrieveAndReassembleData } from './services/dataChunking';
 import { retrieveData } from './api';
@@ -25,6 +23,7 @@ const createServer = async () => {
     // Increase the limit to 10MB (adjust as needed)
     app.use(bodyParser.json({ limit: '10mb' }));
     app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+    app.use(cors());
 
     app.post('/submit', async (req, res) => {
         try {
