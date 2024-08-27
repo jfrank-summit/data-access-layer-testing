@@ -4,7 +4,8 @@
   "main": "index.ts",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node data-operations/index.ts"
+    "data-operations": "ts-node data-operations/index.ts",
+    "transaction-manager": "ts-node transaction-manager/index.ts"
   },
   "dependencies": {
     "axios": "^0.21.1"
