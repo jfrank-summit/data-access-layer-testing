@@ -17,6 +17,8 @@ export type TransactionResult = {
     error?: string;
 };
 
+const MAX_BATCH_SIZE = 1024 * 1024; // 1 MiB
+
 const createApi = async (endpoint: string): Promise<ApiPromise> => {
     const provider = new WsProvider(endpoint);
     return await ApiPromise.create({ provider });
@@ -96,6 +98,41 @@ const submitBatchTransaction = async (
     });
 };
 
+const createBatches = (api: ApiPromise, transactions: Transaction[]): Transaction[][] => {
+    const batches: Transaction[][] = [[]];
+    let currentBatchSize = 0;
+
+    transactions.forEach(tx => {
+        const txSize = api.tx[tx.module][tx.method](...tx.params).encodedLength;
+        if (currentBatchSize + txSize > MAX_BATCH_SIZE) {
+            batches.push([]);
+            currentBatchSize = 0;
+        }
+        batches[batches.length - 1].push(tx);
+        currentBatchSize += txSize;
+    });
+
+    return batches;
+};
+
+const submitBatchTransactions = async (
+    api: ApiPromise,
+    keyPair: KeyringPair,
+    batches: Transaction[][],
+    startNonce: number
+): Promise<TransactionResult[]> => {
+    let nonce = startNonce;
+    const results: TransactionResult[] = [];
+
+    for (const batch of batches) {
+        const batchResults = await submitBatchTransaction(api, keyPair, batch, nonce);
+        results.push(...batchResults);
+        nonce++;
+    }
+
+    return results;
+};
+
 export const createTransactionManager = (rpcEndpoint: string, keypairUri: string) => {
     let api: ApiPromise | null = null;
     let keyPair: KeyringPair | null = null;
@@ -118,7 +155,9 @@ export const createTransactionManager = (rpcEndpoint: string, keypairUri: string
         }
         const nonce = await api.rpc.system.accountNextIndex(keyPair.address);
         console.log(`Starting nonce: ${nonce.toString()}`);
-        return await submitBatchTransaction(api, keyPair, transactions, nonce.toNumber());
+
+        const batches = createBatches(api, transactions);
+        return await submitBatchTransactions(api, keyPair, batches, nonce.toNumber());
     };
 
     return { submit };
