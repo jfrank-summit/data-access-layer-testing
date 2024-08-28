@@ -1,5 +1,12 @@
 import { hashData, chunkData, Chunk } from '../../utils';
 import { storeData, retrieveData } from '../../api';
+import { createTransactionManager } from '../transactionManager/transactionManager';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const RPC_ENDPOINT = process.env.RPC_ENDPOINT || 'ws://localhost:9944';
+const KEYPAIR_URI = process.env.KEYPAIR_URI || '//Alice';
 
 type Metadata = {
     dataCid: string;
@@ -45,14 +52,36 @@ export const processData = async (data: Buffer, filename?: string, mimeType?: st
         chunks: chunks.map(({ cid, order, size }) => ({ cid, order, size })),
     };
 
-    await storeChunks(chunks);
+    // 1. Create metadata object
+    const metadataString = JSON.stringify(metadata);
+
+    // 2. Upload chunks and metadata to Autonomys via system.remarkWithEvent call
+    const transactionManager = createTransactionManager(RPC_ENDPOINT!, KEYPAIR_URI!);
+    const transactions = [
+        {
+            module: 'system',
+            method: 'remarkWithEvent',
+            params: [metadataString],
+        },
+        ...chunks.map(chunk => ({
+            module: 'system',
+            method: 'remarkWithEvent',
+            params: [chunk.data.toString('base64')],
+        })),
+    ];
+
+    const results = await transactionManager.submit(transactions);
+
+    // 3. Store chunks and metadata in the database
     await storeMetadata(metadata);
+    await storeChunks(chunks);
+
+    // 4. Return the metadata hash to the user
     return dataCid;
 };
 
 export const retrieveAndReassembleData = async (metadataCid: string): Promise<Buffer> => {
     const metadataString = await retrieveData(metadataCid);
-    console.log('metadataString', metadataString);
     if (!metadataString || !isJson(metadataString)) {
         throw new Error('Metadata not found');
     }
@@ -68,6 +97,7 @@ export const retrieveAndReassembleData = async (metadataCid: string): Promise<Bu
         return Buffer.from(data, 'base64');
     }
 
+    // Ensure the chunks are sorted by order
     const sortedChunks = metadata.chunks.sort((a, b) => a.order - b.order);
 
     const chunks: Buffer[] = await Promise.all(
