@@ -1,30 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
-
-interface UploadResponse {
-    result: {
-        cid: string;
-        transactionResults: Array<{
-            blockHash: string;
-            batchTxHash: string;
-            index: number;
-        }>;
-    };
-}
-
-interface Metadata {
-    dataCid: string;
-    filename?: string;
-    mimeType?: string;
-    totalSize: number;
-    totalChunks: number;
-    chunks: Array<{
-        cid: string;
-        order: number;
-        size: number;
-    }>;
-}
+import { UploadResponse, Metadata, uploadFile, fetchMetadata } from '../api';
 
 const Form = styled.form`
     display: flex;
@@ -156,13 +133,9 @@ const FileUpload: React.FC = () => {
                 const base64Data = e.target?.result as string;
                 const data = base64Data.split(',')[1]; // Remove the data URL prefix
 
-                const response = await axios.post<UploadResponse>('http://localhost:3000/submit', {
-                    data,
-                    filename: file.name,
-                    mimeType: file.type,
-                });
+                const response = await uploadFile(data, file.name, file.type);
 
-                setUploadResponse(response.data);
+                setUploadResponse(response);
                 setIsLoading(false); // Move setIsLoading(false) here
             };
             reader.readAsDataURL(file);
@@ -173,10 +146,10 @@ const FileUpload: React.FC = () => {
         }
     };
 
-    const fetchMetadata = async (cid: string) => {
+    const handleFetchMetadata = async (cid: string) => {
         try {
-            const response = await axios.get<Metadata>(`http://localhost:3000/metadata/${cid}`);
-            setMetadata(response.data);
+            const response = await fetchMetadata(cid);
+            setMetadata(response);
         } catch (err) {
             console.error('Error fetching metadata:', err);
             setError('Failed to fetch metadata');
@@ -198,7 +171,7 @@ const FileUpload: React.FC = () => {
                     <h3>Upload Successful</h3>
                     <p>
                         CID:{' '}
-                        <MetadataLink onClick={() => fetchMetadata(uploadResponse.result.cid)}>
+                        <MetadataLink onClick={() => handleFetchMetadata(uploadResponse.result.cid)}>
                             {uploadResponse.result.cid}
                         </MetadataLink>
                         {metadata && (
