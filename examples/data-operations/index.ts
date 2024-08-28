@@ -25,8 +25,8 @@ const generateLargeData = (size: number): string => {
     return chunk.repeat(size);
 };
 
-const submitAndRetrieve = async (data: string | Buffer, name?: string, mimeType?: string) => {
-    const submitResponse = await submitData(data, name, mimeType);
+const submitAndRetrieve = async (data: string | Buffer, filename?: string, mimeType?: string) => {
+    const submitResponse = await submitData(data, filename, mimeType);
     logResult('Submitted data. transactionResults:')(submitResponse.data.result.transactionResults);
 
     const retrieveResponse = await retrieveData(submitResponse.data.result.cid);

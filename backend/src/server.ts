@@ -15,13 +15,13 @@ const createServer = async () => {
 
     app.post('/submit', async (req, res) => {
         try {
-            const { data, name, mimeType } = req.body;
+            const { data, filename, mimeType } = req.body;
             if (!data) {
                 return res.status(400).json({ error: 'Data is required' });
             }
 
             const buffer = Buffer.from(data, 'base64');
-            const result = await processData(buffer, name, mimeType);
+            const result = await processData(buffer, filename, mimeType);
 
             res.json({ result });
         } catch (error) {
