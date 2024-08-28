@@ -1,1 +1,1 @@
-export { storeData, retrieveData } from './api';
+export { storeData, retrieveData, getAllData } from './api';

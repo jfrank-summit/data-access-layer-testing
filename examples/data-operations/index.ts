@@ -2,8 +2,12 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3000';
 
-const submitData = (data: string, dataType: 'file' | 'raw', name?: string, mimeType?: string) =>
-    axios.post(`${API_URL}/submit`, { data, dataType, name, mimeType });
+const submitData = (data: string, filename?: string, mimeType?: string) =>
+    axios.post(`${API_URL}/submit`, {
+        data: Buffer.from(data).toString('base64'),
+        filename,
+        mimeType,
+    });
 
 const retrieveData = (metadataCid: string) => axios.get(`${API_URL}/retrieve/${metadataCid}`);
 
@@ -19,9 +23,9 @@ const generateLargeData = (size: number): string => {
     return chunk.repeat(size);
 };
 
-const submitAndRetrieve = async (data: string, dataType: 'file' | 'raw', name?: string, mimeType?: string) => {
-    const submitResponse = await submitData(data, dataType, name, mimeType);
-    logResult('Submitted data. Metadata CID:')(submitResponse.data.metadataCid);
+const submitAndRetrieve = async (data: string, name?: string, mimeType?: string) => {
+    const submitResponse = await submitData(data, name, mimeType);
+    logResult('Submitted data. Metadata CID:')(submitResponse.data);
 
     const retrieveResponse = await retrieveData(submitResponse.data.metadataCid);
 
@@ -34,10 +38,10 @@ const main = async () => {
     const largeData = generateLargeData(256); // 256KB of data
 
     console.log('Submitting and retrieving small data:');
-    await submitAndRetrieve(smallData, 'raw', 'small_data.txt', 'text/plain');
+    submitAndRetrieve(smallData, 'raw');
 
     console.log('\nSubmitting and retrieving large data:');
-    await submitAndRetrieve(largeData, 'file', 'large_file.txt', 'text/plain');
+    await submitAndRetrieve(largeData, 'large_file.txt', 'text/plain');
 };
 
 main().catch(handleError);

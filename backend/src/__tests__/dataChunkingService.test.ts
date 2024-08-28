@@ -1,4 +1,4 @@
-import { processData, retrieveAndReassembleData } from '../services/dataChunking';
+import { processData, retrieveAndReassembleData } from '../services/storageManager';
 import { storeData, retrieveData } from '../api';
 
 // Mock the storeData function

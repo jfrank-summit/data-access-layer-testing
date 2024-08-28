@@ -4,17 +4,8 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { processData, retrieveAndReassembleData } from './services/dataChunking';
-import { retrieveData } from './api';
-
-const isJson = (str: string): boolean => {
-    try {
-        JSON.parse(str);
-        return true;
-    } catch (e) {
-        return false;
-    }
-};
+import { processData, retrieveAndReassembleData } from './services/storageManager';
+import { retrieveData, getAllData } from './api';
 
 const createServer = async () => {
     const app = express();
@@ -27,13 +18,13 @@ const createServer = async () => {
 
     app.post('/submit', async (req, res) => {
         try {
-            const { data, dataType, name, mimeType, customMetadata } = req.body;
+            const { data, name, mimeType } = req.body;
             if (!data) {
                 return res.status(400).json({ error: 'Data is required' });
             }
 
-            const buffer = Buffer.from(data);
-            const metadataCid = await processData(buffer, dataType || 'raw', name, mimeType, customMetadata);
+            const buffer = Buffer.from(data, 'base64');
+            const metadataCid = await processData(buffer, name, mimeType);
 
             res.json({ metadataCid });
         } catch (error) {
@@ -45,23 +36,40 @@ const createServer = async () => {
     app.get('/retrieve/:cid', async (req, res) => {
         try {
             const { cid } = req.params;
-            console.log(`Attempting to retrieve data for metadataCid: ${cid}`);
-            const data = await retrieveAndReassembleData(cid);
+            const metadataCid = `metadata:${cid}`;
 
-            const metadataString = await retrieveData(cid);
+            const metadataString = await retrieveData(metadataCid);
             if (!metadataString) {
                 return res.status(404).json({ error: 'Metadata not found' });
             }
             const metadata = JSON.parse(metadataString);
 
+            console.log(`Attempting to retrieve data for metadataCid: ${cid}`);
+            const data = await retrieveAndReassembleData(metadataCid);
+
             res.set('Content-Type', metadata.mimeType || 'application/octet-stream');
-            if (metadata.name) {
+            if (metadata.filename) {
+                console.log(`Setting Content-Disposition to attachment with filename: ${metadata.filename}`);
                 res.set('Content-Disposition', `attachment; filename="${metadata.name}"`);
             }
             res.send(data);
         } catch (error: any) {
             console.error('Error retrieving data:', error);
             res.status(500).json({ error: 'Failed to retrieve data', details: error.message });
+        }
+    });
+
+    app.get('/all', async (req, res) => {
+        try {
+            const allData = await getAllData();
+            const formattedData = allData.map(({ key, value }) => ({
+                key,
+                value: value.length > 500 ? value.substring(0, 500) + '...' : value,
+            }));
+            res.json(formattedData);
+        } catch (error) {
+            console.error('Error retrieving all data:', error);
+            res.status(500).json({ error: 'Failed to retrieve all data' });
         }
     });
 

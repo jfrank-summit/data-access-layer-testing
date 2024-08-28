@@ -1,1 +1,0 @@
-export { createKeyValueStore } from './keyValueStore';
