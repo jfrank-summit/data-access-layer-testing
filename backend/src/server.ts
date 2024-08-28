@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { processData, retrieveAndReassembleData } from './services/storageManager';
-import { retrieveData, getAllData } from './api';
+import { retrieveData, getAllData, retrieveTransactionResult, getAllTransactionResults } from './api';
 
 const createServer = async () => {
     const app = express();
@@ -67,6 +67,34 @@ const createServer = async () => {
         } catch (error) {
             console.error('Error retrieving all data:', error);
             res.status(500).json({ error: 'Failed to retrieve all data' });
+        }
+    });
+
+    app.get('/transaction/:cid', async (req, res) => {
+        try {
+            const { cid } = req.params;
+            const transactionResult = await retrieveTransactionResult(cid);
+            if (!transactionResult) {
+                return res.status(404).json({ error: 'Transaction result not found' });
+            }
+            res.json(JSON.parse(transactionResult));
+        } catch (error: any) {
+            console.error('Error retrieving transaction result:', error);
+            res.status(500).json({ error: 'Failed to retrieve transaction result', details: error.message });
+        }
+    });
+
+    app.get('/transactions', async (req, res) => {
+        try {
+            const allTransactionResults = await getAllTransactionResults();
+            const formattedResults = allTransactionResults.map(({ key, value }) => ({
+                key,
+                value: JSON.parse(value),
+            }));
+            res.json(formattedResults);
+        } catch (error: any) {
+            console.error('Error retrieving all transaction results:', error);
+            res.status(500).json({ error: 'Failed to retrieve all transaction results', details: error.message });
         }
     });
 

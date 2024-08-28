@@ -1,5 +1,5 @@
 import { hashData, chunkData, Chunk } from '../../utils';
-import { storeData, retrieveData } from '../../api';
+import { storeData, retrieveData, storeTransactionResult } from '../../api';
 import { createTransactionManager, TransactionResult } from '../transactionManager/transactionManager';
 import dotenv from 'dotenv';
 
@@ -80,7 +80,12 @@ export const processData = async (
     await storeMetadata(metadata);
     await storeChunks(chunks);
 
-    // 4. Return the metadata hash to the user
+    // 4. Store transaction results
+    await Promise.all(
+        results.map((result, index) => storeTransactionResult(`${dataCid}:${index}`, JSON.stringify(result)))
+    );
+
+    // 5. Return the metadata hash and transaction results to the user
     return { cid: dataCid, transactionResults: results };
 };
 
