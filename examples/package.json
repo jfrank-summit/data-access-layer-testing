@@ -8,10 +8,11 @@
     "transaction-manager": "ts-node transaction-manager/index.ts"
   },
   "dependencies": {
-    "axios": "^0.21.1"
+    "axios": "^1.7.5",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "@types/node": "^22.3.0",
+    "@types/node": "^22.5.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   }
