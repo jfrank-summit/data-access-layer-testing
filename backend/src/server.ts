@@ -21,9 +21,9 @@ const createServer = async () => {
             }
 
             const buffer = Buffer.from(data, 'base64');
-            const metadataCid = await processData(buffer, name, mimeType);
+            const result = await processData(buffer, name, mimeType);
 
-            res.json({ metadataCid });
+            res.json({ result });
         } catch (error) {
             console.error('Error processing data:', error);
             res.status(500).json({ error: 'Failed to process and submit data' });

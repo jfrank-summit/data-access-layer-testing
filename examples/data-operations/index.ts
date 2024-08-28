@@ -27,9 +27,9 @@ const generateLargeData = (size: number): string => {
 
 const submitAndRetrieve = async (data: string | Buffer, name?: string, mimeType?: string) => {
     const submitResponse = await submitData(data, name, mimeType);
-    logResult('Submitted data. Metadata CID:')(submitResponse.data);
+    logResult('Submitted data. transactionResults:')(submitResponse.data.result.transactionResults);
 
-    const retrieveResponse = await retrieveData(submitResponse.data.metadataCid);
+    const retrieveResponse = await retrieveData(submitResponse.data.result.cid);
     const retrievedData = Buffer.from(retrieveResponse.data, 'base64');
 
     // Compare the original data with the retrieved data

@@ -1,6 +1,6 @@
 import { hashData, chunkData, Chunk } from '../../utils';
 import { storeData, retrieveData } from '../../api';
-import { createTransactionManager } from '../transactionManager/transactionManager';
+import { createTransactionManager, TransactionResult } from '../transactionManager/transactionManager';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -39,7 +39,11 @@ const storeChunks = async (chunks: Chunk[]): Promise<void> => {
     await Promise.all(chunks.map(chunk => storeData(chunk.cid, chunk.data.toString('base64'))));
 };
 
-export const processData = async (data: Buffer, filename?: string, mimeType?: string): Promise<string> => {
+export const processData = async (
+    data: Buffer,
+    filename?: string,
+    mimeType?: string
+): Promise<{ cid: string; transactionResults: TransactionResult[] }> => {
     const chunks = chunkData(data);
     const dataCid = hashData(data);
 
@@ -77,7 +81,7 @@ export const processData = async (data: Buffer, filename?: string, mimeType?: st
     await storeChunks(chunks);
 
     // 4. Return the metadata hash to the user
-    return dataCid;
+    return { cid: dataCid, transactionResults: results };
 };
 
 export const retrieveAndReassembleData = async (metadataCid: string): Promise<Buffer> => {

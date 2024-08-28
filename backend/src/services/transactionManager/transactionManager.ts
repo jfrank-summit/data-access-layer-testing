@@ -9,7 +9,7 @@ type Transaction = {
     params: any[];
 };
 
-type TransactionResult = {
+export type TransactionResult = {
     success: boolean;
     hash: string;
     blockHash?: string;
