@@ -1,33 +1,10 @@
-import { ApiPromise, WsProvider } from '@polkadot/api';
-import { Keyring } from '@polkadot/keyring';
+import { ApiPromise } from '@polkadot/api';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { SubmittableResultValue } from '@polkadot/api/types';
-
-type Transaction = {
-    module: string;
-    method: string;
-    params: any[];
-};
-
-export type TransactionResult = {
-    success: boolean;
-    hash: string;
-    blockHash?: string;
-    status: string;
-    error?: string;
-};
+import { createApi, createKeyPair, getAccountNonce } from './networkApi';
+import { Transaction, TransactionResult } from './types';
 
 const MAX_BATCH_SIZE = 1024 * 1024; // 1 MiB
-
-const createApi = async (endpoint: string): Promise<ApiPromise> => {
-    const provider = new WsProvider(endpoint);
-    return await ApiPromise.create({ provider });
-};
-
-const createKeyPair = (uri: string): KeyringPair => {
-    const keyring = new Keyring({ type: 'sr25519' });
-    return keyring.addFromUri(uri);
-};
 
 const submitBatchTransaction = async (
     api: ApiPromise,
@@ -67,7 +44,7 @@ const submitBatchTransaction = async (
                         resolve(
                             transactions.map(() => ({
                                 success: false,
-                                hash: batchTx.hash.toString(),
+                                batchTxHash: batchTx.hash.toString(),
                                 status: status.type,
                                 error: errorMessage,
                             }))
@@ -75,7 +52,7 @@ const submitBatchTransaction = async (
                     } else {
                         const results = transactions.map((_, index) => ({
                             success: true,
-                            hash: batchTx.hash.toString(),
+                            batchTxHash: batchTx.hash.toString(),
                             blockHash: status.asInBlock.toString(),
                             status: status.type,
                             index,
@@ -153,11 +130,11 @@ export const createTransactionManager = (rpcEndpoint: string, keypairUri: string
         if (!api || !keyPair) {
             throw new Error('Transaction manager not initialized');
         }
-        const nonce = await api.rpc.system.accountNextIndex(keyPair.address);
-        console.log(`Starting nonce: ${nonce.toString()}`);
+        const nonce = await getAccountNonce(api, keyPair.address);
+        console.log(`Starting nonce: ${nonce}`);
 
         const batches = createBatches(api, transactions);
-        return await submitBatchTransactions(api, keyPair, batches, nonce.toNumber());
+        return await submitBatchTransactions(api, keyPair, batches, nonce);
     };
 
     return { submit };

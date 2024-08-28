@@ -1,1 +1,3 @@
-export { createTransactionManager, TransactionResult } from './transactionManager';
+export { createTransactionManager } from './transactionManager';
+export { Transaction, TransactionResult } from './types';
+export { createApi, createKeyPair, getAccountNonce } from './networkApi';

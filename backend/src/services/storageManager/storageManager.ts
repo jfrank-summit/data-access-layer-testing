@@ -1,6 +1,6 @@
 import { hashData, chunkData, Chunk } from '../../utils';
 import { storeData, retrieveData, storeTransactionResult } from '../../api';
-import { createTransactionManager, TransactionResult } from '../transactionManager/transactionManager';
+import { createTransactionManager, TransactionResult } from '../transactionManager';
 import dotenv from 'dotenv';
 
 dotenv.config();
