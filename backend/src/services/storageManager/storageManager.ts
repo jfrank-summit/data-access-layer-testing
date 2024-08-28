@@ -76,16 +76,11 @@ export const processData = async (
 
     const results = await transactionManager.submit(transactions);
 
-    // 3. Store chunks and metadata in the database
     await storeMetadata(metadata);
     await storeChunks(chunks);
 
-    // 4. Store transaction results
-    await Promise.all(
-        results.map((result, index) => storeTransactionResult(`${dataCid}:${index}`, JSON.stringify(result)))
-    );
+    await storeTransactionResult(dataCid, JSON.stringify(results));
 
-    // 5. Return the metadata hash and transaction results to the user
     return { cid: dataCid, transactionResults: results };
 };
 
