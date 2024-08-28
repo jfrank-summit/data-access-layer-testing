@@ -67,6 +67,21 @@ const createServer = async () => {
         }
     });
 
+    app.get('/metadata/:cid', async (req, res) => {
+        try {
+            const { cid } = req.params;
+            const metadataString = await retrieveData(`metadata:${cid}`);
+            if (!metadataString) {
+                return res.status(404).json({ error: 'Metadata not found' });
+            }
+            const metadata: Metadata = JSON.parse(metadataString);
+            res.json(metadata);
+        } catch (error: any) {
+            console.error('Error retrieving metadata:', error);
+            res.status(500).json({ error: 'Failed to retrieve metadata', details: error.message });
+        }
+    });
+
     app.get('/all', async (req, res) => {
         try {
             const allData = await getAllData();
