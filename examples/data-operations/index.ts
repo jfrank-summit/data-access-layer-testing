@@ -1,15 +1,17 @@
 import axios from 'axios';
+import fs from 'fs/promises'; // Added import for fs
 
 const API_URL = 'http://localhost:3000';
 
-const submitData = (data: string, filename?: string, mimeType?: string) =>
+const submitData = (data: string | Buffer, filename?: string, mimeType?: string) =>
     axios.post(`${API_URL}/submit`, {
-        data: Buffer.from(data).toString('base64'),
+        data: Buffer.isBuffer(data) ? data.toString('base64') : Buffer.from(data).toString('base64'),
         filename,
         mimeType,
     });
 
-const retrieveData = (metadataCid: string) => axios.get(`${API_URL}/retrieve/${metadataCid}`);
+const retrieveData = (metadataCid: string) =>
+    axios.get(`${API_URL}/retrieve/${metadataCid}`, { responseType: 'arraybuffer' });
 
 const logResult =
     (message: string) =>
@@ -23,14 +25,18 @@ const generateLargeData = (size: number): string => {
     return chunk.repeat(size);
 };
 
-const submitAndRetrieve = async (data: string, name?: string, mimeType?: string) => {
+const submitAndRetrieve = async (data: string | Buffer, name?: string, mimeType?: string) => {
     const submitResponse = await submitData(data, name, mimeType);
     logResult('Submitted data. Metadata CID:')(submitResponse.data);
 
     const retrieveResponse = await retrieveData(submitResponse.data.metadataCid);
+    const retrievedData = Buffer.from(retrieveResponse.data, 'base64');
 
     // Compare the original data with the retrieved data
-    console.log('Data integrity check:', data === retrieveResponse.data ? 'Passed' : 'Failed');
+    const originalData = Buffer.isBuffer(data) ? data : Buffer.from(data);
+    console.log('Original data size:', originalData.length);
+    console.log('Retrieved data size:', retrievedData.length);
+    console.log('Data integrity check:', originalData.equals(retrievedData) ? 'Passed' : 'Failed');
 };
 
 const main = async () => {
@@ -38,10 +44,17 @@ const main = async () => {
     const largeData = generateLargeData(256); // 256KB of data
 
     console.log('Submitting and retrieving small data:');
-    submitAndRetrieve(smallData, 'raw');
+    await submitAndRetrieve(smallData);
 
     console.log('\nSubmitting and retrieving large data:');
     await submitAndRetrieve(largeData, 'large_file.txt', 'text/plain');
+
+    console.log('\nSubmitting and retrieving PDF file:');
+    const pdfData = await fs.readFile('autonomys_whitepaper.pdf').catch(error => {
+        console.error('Error reading PDF:', error);
+        throw error; // Rethrow to handle it in the main function
+    });
+    await submitAndRetrieve(pdfData, 'autonomys_whitepaper.pdf', 'application/pdf');
 };
 
 main().catch(handleError);
