@@ -3,6 +3,12 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { processData, retrieveAndReassembleData } from './services/storageManager';
 import { retrieveData, getAllData, retrieveTransactionResult, getAllTransactionResults } from './api';
+import { TransactionResult, createApi, retrieveRemarkFromTransaction } from './services/transactionManager';
+
+import dotenv from 'dotenv';
+dotenv.config();
+
+const RPC_ENDPOINT = process.env.RPC_ENDPOINT || 'ws://localhost:9944';
 
 const createServer = async () => {
     const app = express();
@@ -95,6 +101,33 @@ const createServer = async () => {
         } catch (error: any) {
             console.error('Error retrieving all transaction results:', error);
             res.status(500).json({ error: 'Failed to retrieve all transaction results', details: error.message });
+        }
+    });
+
+    app.get('/fromTransactions/:cid', async (req, res) => {
+        try {
+            const { cid } = req.params;
+            const transactionResultsString = await retrieveTransactionResult(cid);
+
+            if (!transactionResultsString) {
+                return res.status(404).json({ error: 'Transaction result not found' });
+            }
+
+            const transactionResults: TransactionResult[] = JSON.parse(transactionResultsString);
+
+            const api = await createApi(RPC_ENDPOINT);
+            const remarks = await Promise.all(
+                transactionResults.map(result => retrieveRemarkFromTransaction(api, result))
+            );
+
+            if (remarks === null) {
+                return res.status(404).json({ error: 'Remarks not found or invalid transaction' });
+            }
+
+            res.json({ cid, remarks });
+        } catch (error: any) {
+            console.error('Error retrieving remark:', error);
+            res.status(500).json({ error: 'Failed to retrieve remark', details: error.message });
         }
     });
 

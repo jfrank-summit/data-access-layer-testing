@@ -1,3 +1,4 @@
+import '@polkadot/api-augment';
 import { ApiPromise } from '@polkadot/api';
 import { TransactionResult } from './types';
 
@@ -14,18 +15,35 @@ export const retrieveRemarkFromTransaction = async (
         const block = await api.rpc.chain.getBlock(result.blockHash);
         const extrinsics = block.block.extrinsics;
 
-        if (result.index >= extrinsics.length) {
-            console.error('Invalid extrinsic index');
+        const batchExtrinsic = extrinsics.find(ex => ex.hash.toHex() === result.batchTxHash);
+
+        if (!batchExtrinsic) {
+            console.error('Batch extrinsic not found');
             return null;
         }
 
-        const extrinsic = extrinsics[result.index];
+        if (batchExtrinsic.method.method !== 'batchAll') {
+            console.error('Extrinsic is not a batch');
+            return null;
+        }
 
-        if (extrinsic.method.section === 'system' && extrinsic.method.method === 'remarkWithEvent') {
-            const remarkHex = extrinsic.args[0].toHex();
+        const batchCalls = batchExtrinsic.method.args[0] as unknown as any[];
+
+        if (result.index >= batchCalls.length) {
+            console.error('Invalid extrinsic index within batch');
+            return null;
+        }
+
+        const targetCall = batchCalls[result.index];
+
+        if (
+            (targetCall.method === 'remarkWithEvent' || targetCall.method === 'remark') &&
+            targetCall.section === 'system'
+        ) {
+            const remarkHex = targetCall.args[0].toHex();
             return Buffer.from(remarkHex.slice(2), 'hex').toString('utf8');
         } else {
-            console.error('Extrinsic is not a remark');
+            console.error('Target call is not a remark');
             return null;
         }
     } catch (error) {
