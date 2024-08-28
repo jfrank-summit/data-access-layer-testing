@@ -20,9 +20,16 @@ export const retrieveData = async (key: string): Promise<string | undefined> => 
     return await dbOps!.getData(key);
 };
 
+//TODO: add pagination
 export const getAllData = async (): Promise<Array<{ key: string; value: string }>> => {
     await ensureDbInitialized();
     return await dbOps!.getAllData();
+};
+
+//TODO: add pagination
+export const getAllMetadata = async (): Promise<Array<{ key: string; value: string }>> => {
+    await ensureDbInitialized();
+    return await dbOps!.getAllMetadata();
 };
 
 export const storeTransactionResult = async (key: string, data: string): Promise<string> => {
@@ -37,6 +44,7 @@ export const retrieveTransactionResult = async (key: string): Promise<string | u
     return await dbOps!.getTransactionResult(key);
 };
 
+//TODO: add pagination
 export const getAllTransactionResults = async (): Promise<Array<{ key: string; value: string }>> => {
     await ensureDbInitialized();
     return await dbOps!.getAllTransactionResults();

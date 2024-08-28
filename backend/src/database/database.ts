@@ -37,6 +37,10 @@ export const initDatabase = async () => {
         return db.all('SELECT key, value FROM mappings');
     };
 
+    const getAllMetadata = async (): Promise<Array<{ key: string; value: string }>> => {
+        return db.all("SELECT key, value FROM mappings WHERE key LIKE 'metadata:%'");
+    };
+
     const setTransactionResult = async (key: string, value: string): Promise<void> => {
         await db.run('INSERT OR REPLACE INTO blockchain_transactions (key, value) VALUES (?, ?)', [key, value]);
     };
@@ -54,6 +58,7 @@ export const initDatabase = async () => {
         setData,
         getData,
         getAllData,
+        getAllMetadata,
         setTransactionResult,
         getTransactionResult,
         getAllTransactionResults,

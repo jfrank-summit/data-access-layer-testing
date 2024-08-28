@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { processData, retrieveAndReassembleData, Metadata } from './services/storageManager';
-import { retrieveData, getAllData, retrieveTransactionResult, getAllTransactionResults } from './api';
+import { retrieveData, getAllData, getAllMetadata, retrieveTransactionResult, getAllTransactionResults } from './api';
 import { TransactionResult, createApi, retrieveRemarkFromTransaction } from './services/transactionManager';
 import { isJson } from './utils';
 
@@ -79,6 +79,20 @@ const createServer = async () => {
         } catch (error: any) {
             console.error('Error retrieving metadata:', error);
             res.status(500).json({ error: 'Failed to retrieve metadata', details: error.message });
+        }
+    });
+
+    app.get('/allMetadata', async (req, res) => {
+        try {
+            const allMetadata = await getAllMetadata();
+            const formattedMetadata = allMetadata.map(({ key, value }) => ({
+                key,
+                value: JSON.parse(value),
+            }));
+            res.json(formattedMetadata);
+        } catch (error) {
+            console.error('Error retrieving all metadata:', error);
+            res.status(500).json({ error: 'Failed to retrieve all metadata' });
         }
     });
 
