@@ -8,7 +8,7 @@ dotenv.config();
 const RPC_ENDPOINT = process.env.RPC_ENDPOINT || 'ws://localhost:9944';
 const KEYPAIR_URI = process.env.KEYPAIR_URI || '//Alice';
 
-type Metadata = {
+export type Metadata = {
     dataCid: string;
     filename?: string;
     mimeType?: string;

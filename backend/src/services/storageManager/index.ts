@@ -1,1 +1,1 @@
-export { processData, retrieveAndReassembleData } from './storageManager';
+export { processData, retrieveAndReassembleData, Metadata } from './storageManager';
