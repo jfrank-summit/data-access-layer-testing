@@ -1,6 +1,7 @@
 import { hashData, chunkData, Chunk } from '../../utils';
 import { storeData, retrieveData, storeTransactionResult } from '../../api';
 import { createTransactionManager, TransactionResult } from '../transactionManager';
+import { isJson } from '../../utils';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -19,15 +20,6 @@ export type Metadata = {
         order: number;
         size: number;
     }>;
-};
-
-const isJson = (str: string): boolean => {
-    try {
-        JSON.parse(str);
-        return true;
-    } catch (e) {
-        return false;
-    }
 };
 
 const storeMetadata = async (metadata: Metadata): Promise<string> => {
@@ -53,13 +45,11 @@ export const processData = async (
         mimeType,
         totalSize: data.length,
         totalChunks: chunks.length,
-        chunks: chunks.map(({ cid, order, size }) => ({ cid, order, size })),
+        chunks: chunks,
     };
 
-    // 1. Create metadata object
     const metadataString = JSON.stringify(metadata);
 
-    // 2. Upload chunks and metadata to Autonomys via system.remarkWithEvent call
     const transactionManager = createTransactionManager(RPC_ENDPOINT!, KEYPAIR_URI!);
     const transactions = [
         {

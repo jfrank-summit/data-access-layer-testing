@@ -85,10 +85,8 @@ const createServer = async () => {
     app.get('/allMetadata', async (req, res) => {
         try {
             const allMetadata = await getAllMetadata();
-            const formattedMetadata = allMetadata.map(({ key, value }) => ({
-                key,
-                value: JSON.parse(value),
-            }));
+            const formattedMetadata = allMetadata.map(({ value }) => JSON.parse(value));
+            console.log('downloaded formattedMetadata', formattedMetadata);
             res.json(formattedMetadata);
         } catch (error) {
             console.error('Error retrieving all metadata:', error);

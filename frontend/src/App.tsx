@@ -1,7 +1,8 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import FileUpload from './components/FileUpload';
+import FileBrowser from './components/FileBrowser';
 
 const AppContainer = styled.div`
     max-width: 800px;
@@ -24,14 +25,33 @@ const ContentContainer = styled.div`
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
+const NavContainer = styled.nav`
+    margin-bottom: 2rem;
+`;
+
+const NavLink = styled(Link)`
+    margin-right: 1rem;
+    color: #007bff;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+`;
+
 const App: React.FC = () => {
     return (
         <Router>
             <AppContainer>
                 <Title>Autonomys Data Storage</Title>
                 <ContentContainer>
+                    <NavContainer>
+                        <NavLink to='/'>Upload</NavLink>
+                        <NavLink to='/browse'>Browse</NavLink>
+                    </NavContainer>
                     <Routes>
                         <Route path='/' element={<FileUpload />} />
+                        <Route path='/browse' element={<FileBrowser />} />
                     </Routes>
                 </ContentContainer>
             </AppContainer>
