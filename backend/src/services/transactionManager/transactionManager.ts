@@ -4,7 +4,7 @@ import { SubmittableResultValue } from '@polkadot/api/types';
 import { createApi, createKeyPair, getAccountNonce } from './networkApi';
 import { Transaction, TransactionResult } from './types';
 
-const MAX_BATCH_SIZE = 1024 * 1024; // 1 MiB
+const MAX_BATCH_SIZE = 3000 * 1024; // 3 MiB
 
 const submitBatchTransaction = async (
     api: ApiPromise,
@@ -15,23 +15,35 @@ const submitBatchTransaction = async (
     return new Promise((resolve, reject) => {
         const txs = transactions.map(tx => api.tx[tx.module][tx.method](...tx.params));
         const batchTx = api.tx.utility.batchAll(txs);
-
-        let unsubscribe: () => void;
+        let unsubscribe: (() => void) | undefined;
+        let isResolved = false;
 
         const timeout = setTimeout(() => {
-            unsubscribe();
-            reject(new Error('Transaction timeout'));
-        }, 60000); // 60 second timeout
+            if (unsubscribe) {
+                unsubscribe();
+            }
+            if (!isResolved) {
+                console.log(`Transaction timed out. Tx hash: ${batchTx.hash.toString()}`);
+                reject(new Error('Transaction timeout'));
+            }
+        }, 180000); // 3 minutes timeout
+
+        const cleanup = () => {
+            clearTimeout(timeout);
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
 
         batchTx
-            .signAndSend(keyPair, { nonce }, (result: SubmittableResultValue) => {
+            .signAndSend(keyPair, { nonce }, async (result: SubmittableResultValue) => {
                 const { status, events, dispatchError } = result;
 
-                console.log(`Current status: ${status.type}`);
+                console.log(`Current status: ${status.type}, Tx hash: ${batchTx.hash.toString()}`);
 
                 if (status.isInBlock || status.isFinalized) {
-                    clearTimeout(timeout);
-                    unsubscribe();
+                    cleanup();
+                    isResolved = true;
 
                     if (dispatchError) {
                         let errorMessage;
@@ -57,11 +69,12 @@ const submitBatchTransaction = async (
                             status: status.type,
                             index,
                         }));
+                        console.log(`In block: ${status.asInBlock.toString()}`);
                         resolve(results);
                     }
                 } else if (status.isDropped || status.isInvalid || status.isUsurped) {
-                    clearTimeout(timeout);
-                    unsubscribe();
+                    cleanup();
+                    isResolved = true;
                     reject(new Error(`Transaction ${status.type}`));
                 }
             })
@@ -69,7 +82,7 @@ const submitBatchTransaction = async (
                 unsubscribe = unsub;
             })
             .catch(error => {
-                clearTimeout(timeout);
+                cleanup();
                 reject(error);
             });
     });
